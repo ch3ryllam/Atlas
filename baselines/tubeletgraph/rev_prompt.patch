@@ -1,0 +1,83 @@
+diff --git a/TubeletGraph/run.py b/TubeletGraph/run.py
+index d1bca27..295b6a9 100644
+--- a/TubeletGraph/run.py
++++ b/TubeletGraph/run.py
+@@ -46,6 +46,7 @@ def main():
+     parser.add_argument("-m", "--method", default="Ours", help="Method name for predictions")
+     parser.add_argument("--gpus", type=int, nargs='+', default=[0], help="List of GPU IDs to use (e.g., --gpus 0 1 2 3)")
+     parser.add_argument("--skip_vlm", action="store_true", help="Skip VLM step")
++    parser.add_argument("--rev", action="store_true", help="reverse run: prompt for composition")
+     
+     args = parser.parse_args()
+     args.num_workers = len(args.gpus)
+@@ -107,7 +108,7 @@ def main():
+         "python3", "TubeletGraph/vlm/prompt_vlm.py",
+         "-c", args.config,
+         "-p", pred_name
+-    ]
++    ] + (["--rev"] if args.rev else [])
+     run_command(cmd, "Obtaining state graph description")
+ 
+ 
+diff --git a/TubeletGraph/vlm/prompt_vlm.py b/TubeletGraph/vlm/prompt_vlm.py
+index 3570256..fc9ab34 100644
+--- a/TubeletGraph/vlm/prompt_vlm.py
++++ b/TubeletGraph/vlm/prompt_vlm.py
+@@ -84,7 +84,7 @@ def get_system_prompt():
+     """
+     return prompt
+ 
+-def get_message_prompts():
++def get_message_prompts_decomp():
+     prompt_messages_id = [
+         ('text', f"Here is an image, which is the first frame of a video. The object of interest is highlighted with a {init_c_name} contour."),
+         ('text', f"Please name the object with {init_c_name} contour as concisely as possible in three words or less. Please do not include any other information in your answer."),
+@@ -105,6 +105,31 @@ def get_message_prompts():
+     return prompt_messages_id, prompt_messages_frame, prompt_messages_cls, prompt_messages_action
+ 
+ 
++def get_message_prompts_comp():
++    prompt_messages_id = [
++        ('text', f"Here is an image, which is the last frame of a video. The object of interest is highlighted with a {init_c_name} contour."),
++        ('text', f"Please name the object with {init_c_name} contour as concisely as possible in three words or less. Please do not include any other information in your answer."),
++    ]
++    prompt_messages_frame = [
++        ('text', f"Do you able to recognize the objects in {init_c_name} and {query_c_name} contours clearly? Potential difficulties may be due to motion blur, or the majority of the objects are cropped by the edge of the image. Please answer with yes or no and do not include any other information."),
++    ]
++    prompt_messages_cls = [
++        ('text', f"Here is an image, which is the last frame of a video. The first object of interest is highlighted with a {init_c_name} contour."),
++        ('text', f"Here is another image, which is an earlier frame of the same video. A second object of interest is also highlighted with a {query_c_name} contour."),
++        ('text', f"Are the two objects semantically related and likely to merge into the same object? Please answer with yes or no and do not include any other information. Only say no if you can clearly recognize the objects and know that they are semantically unrelated (e.g. a table and a chair)."),
++    ]
++    prompt_messages_action = [
++        ('text', f"Here is an image, which is the last frame of a video. The object of interest is highlighted with a {init_c_name} contour."),
++        ('text', f"Here is another image, which is an earlier frame of the same video. The original object of interest is still highlighted with a {init_c_name} contour. In addition, there is another object with a {query_c_name} contour that we believe may merge with the original object of interest."),
++        ('text', f"Please describe the two objects (one with {init_c_name} contour and one with {query_c_name} contour) in the second image each in three words or less while including the object name. In addition, please describe how the two objects relate as they combine together using a single verb only without any tense. Please give the answer as a json tuple of (object with {init_c_name} contour, object with {query_c_name} contour, action). Please do not include any other information in your answer."),
++    ]
++    return prompt_messages_id, prompt_messages_frame, prompt_messages_cls, prompt_messages_action
++
++
++def get_message_prompts(rev=False):
++    return get_message_prompts_comp() if rev else get_message_prompts_decomp()
++
++
+ def get_masked_image(image, mask, color_rgb, mask_alpha=0.0, contour_thickness=3):
+     if isinstance(mask, dict):
+         mask = rle_to_bmask(mask)
+@@ -127,6 +152,7 @@ def get_parser():
+     parser.add_argument('-c', "--config", default="configs/default.yaml", metavar="FILE", help="path to config file",)
+     parser.add_argument('-p', '--pred', type=str, help='prediction directory name', default='vost-val-Annotations_fps5-Ours')
+     parser.add_argument('--temp', type=float, default=0.0, help='Temperature for sampling')
++    parser.add_argument('--rev', action='store_true', help='reverse run: prompt for composition')
+     return parser
+ 
+ def yes_no_cleanup(response):
+@@ -163,7 +189,7 @@ if __name__ == "__main__":
+     os.makedirs(out_dir, exist_ok=True)
+     
+     system_prompt = get_system_prompt()
+-    prompt_messages_id, prompt_messages_frame, _, prompt_messages_action = get_message_prompts()
++    prompt_messages_id, prompt_messages_frame, _, prompt_messages_action = get_message_prompts(rev=args.rev)
+ 
+     instance_names = [x.removesuffix('.json') for x in os.listdir(pred_track_dir) if x.endswith('.json')]
+ 

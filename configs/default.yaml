@@ -1,0 +1,143 @@
+name: Default Config for Atlas
+
+paths:
+  intermdir: ./_interm_out
+  outdir: ./_pred_out
+  visdir: ./_vis_out
+  evaldir: ./_quant_out
+
+datasets:
+  vost:
+    name: vost
+    data_dir: ./VOST
+    image_dir: ./VOST/JPEGImages
+    anno_dir: ./VOST/Annotations
+    split_dir: ./splits/vost
+    image_format: "frame*.jpg"
+    anno_format:  "frame*.png"
+    fps: 5
+  vscos:
+    name: vscos
+    data_dir: ./VSCOS
+    image_dir: ./VSCOS/JPEGImages
+    anno_dir: ./VSCOS/Annotations
+    split_dir: ./splits/vscos
+    image_format: "frame_*.jpg"
+    anno_format:  "frame_*.png"
+    fps: 60
+  m3vos:
+    name: m3vos
+    data_dir: ./M3VOS
+    image_dir: ./M3VOS/JPEGImages
+    anno_dir: ./M3VOS/Annotations
+    split_dir: ./splits/m3vos
+    image_format: "*.jpg"
+    anno_format: "*.png"
+    fps: 30
+  davis:
+    name: davis
+    data_dir: ./DAVIS17_480p
+    image_dir: ./DAVIS17_480p/JPEGImages
+    anno_dir: ./DAVIS17_480p/Annotations
+    split_dir: ./splits/davis
+    image_format: "*.jpg"
+    anno_format: "*.png"
+    fps: 24
+  custom: # used by quick_run.py, do not change
+    name: custom
+    data_dir: ./_custom_dataset
+    image_dir: ./_custom_dataset/JPEGImages
+    anno_dir: ./_custom_dataset/Annotations
+    split_dir: ./splits/custom
+    image_format: "*.jpg"
+    anno_format: "*.png"
+    fps: 15
+  ours:
+    name: ours
+    data_dir: ./OmniST
+    image_dir: ./OmniST/JPEGImages
+    anno_dir: ./OmniST/Annotations # used for evaluation in prompt-free TAS
+    split_dir: ./splits/ours
+    image_format: "*.jpg"
+    anno_format: ""
+    fps: 15
+  # Add your own dataset below!
+
+entity_seg:
+  cropformer:
+    project_path: ./thirdparty/detectron2/projects/CropFormer
+    config_path: ./thirdparty/detectron2/projects/CropFormer/configs/entityv2/entity_segmentation/cropformer_hornet_3x.yaml
+    opts: ['MODEL.WEIGHTS', './_ckpts/CropFormer_hornet_3x_03823a.pth']
+    confidence_threshold: 0.5
+#   sam_automask:
+#     model_weights: ./_ckpts/sam2.1_hiera_large.pt
+#     config: configs/sam2.1/sam2.1_hiera_l.yaml
+#     kwargs:
+#       points_per_side: 32
+#       points_per_batch: 64
+#       pred_iou_thresh: 0.75
+#       stability_score_thresh: 0.95
+#       stability_score_offset: 1.0
+#       mask_threshold: 0.0
+
+tubelet:
+  entity_method: cropformer
+  tracker:
+    name: SAM2.1
+    module: SAM2
+    model_weights: ./_ckpts/sam2.1_hiera_large.pt
+    model_cfg: configs/sam2.1/sam2.1_hiera_l.yaml
+    multi_mask: False
+  init_entity_thrd: 0.0005   # frac of pixel threshold of an initializing entity
+  fill_entity_thrd: 0.0016   # frac of pixel threshold of a filling entity (1/25)^2
+  fill_coverage_thrd: 0.25   # add a filling entity only if it is covered by existing entities for < 0.25
+  rm_init_entity_thrd: 0.75  # remove an initializing entity if it is covered by prompt mask for > 0.75
+  collect_spacing: 30
+#   prox_tracker:
+#     name: SAM2.1
+#     module: SAM2
+#     model_weights: ./_ckpts/sam2.1_hiera_large.pt
+#     model_cfg: configs/sam2.1/sam2.1_hiera_l.yaml
+#     multi_mask: True
+
+# methods:
+#   Ours:
+#     name: Ours
+#     module: Atlas
+#     tubelet_dirname: "tubelets_{}_cropformer_fcclip"
+#     thrds: 
+#       mm_cover: 0.3
+#       clip_sim_max: 0.7
+#   Ours_abl_prox:  # Ablation without proximity constraint
+#     name: Ours_abl_prox
+#     module: Atlas
+#     tubelet_dirname: "tubelets_{}_cropformer_fcclip"
+#     thrds: 
+#       mm_cover: -1.0
+#       clip_sim_max: 0.7
+#   Ours_abl_sem:  # Ablation without semantic constraint
+#     name: Ours_abl_sem
+#     module: Atlas
+#     tubelet_dirname: "tubelets_{}_cropformer_fcclip"
+#     thrds: 
+#       mm_cover: 0.3
+#       clip_sim_max: -1.0
+#   Ours_abl_both:  # Ablation without both constraints
+#     name: Ours_abl_both
+#     module: Atlas
+#     tubelet_dirname: "tubelets_{}_cropformer_fcclip"
+#     thrds: 
+#       mm_cover: -1.0
+#       clip_sim_max: -1.0
+
+vlm:
+  model_name: gpt-4.1 # gpt-4.1, Qwen/Qwen2.5-VL-7B-Instruct:hyperbolic
+  init_color_rgb: [245, 0, 150]
+  init_color_name: pink
+  query_color_rgb: [0, 245, 245]
+  query_color_name: cyan-blue
+
+# eval:
+#   obj_id: '0'
+#   skip_first_frame: True
+#   temploc_max_pad: 0 # seconds each side
