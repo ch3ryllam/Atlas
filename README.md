@@ -1,5 +1,5 @@
 # Tracking Objects Through Assembly and Decomposition
-### [Project Page](https://atlas-track-objects.github.io/) | [Paper](https://arxiv.org/abs/2511.04678) | [Data](https://huggingface.co/datasets/ch3ryllam/OmniST)
+### [Project Page](https://atlas-track-objects.github.io/) | [Paper](https://arxiv.org/abs/2611.26269) | [Data](https://huggingface.co/datasets/ch3ryllam/OmniST)
 
 Official PyTorch implementation for the paper: "Tracking Objects Through Assembly and Decomposition".
 
@@ -194,12 +194,3 @@ python Atlas/vis/render_partitions.py -c configs/default.yaml -d ours -i cracker
 
 ## Citation
 Coming soon!
-<!-- If you find our work useful in your research, please consider citing our paper:
-```bibtex
-@article{sun2025tracking,
-  title={Tracking and Understanding Object Transformations},
-  author={Sun, Yihong and Yang, Xinyu and Sun, Jennifer J and Hariharan, Bharath},
-  journal={Advances in Neural Information Processing Systems},
-  year={2025}
-}
-``` -->

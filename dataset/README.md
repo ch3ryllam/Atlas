@@ -32,20 +32,10 @@ jupyter notebook demo.ipynb
 ``` -->
 
 ## Dataset Details
-Please refer to the [manuscript](https://arxiv.org/pdf/2511.04678) for more details regarding dataset construction and evaluation metrics.
+Please refer to the [manuscript](https://arxiv.org/pdf/2611.26269) for more details regarding dataset construction and evaluation metrics.
 
 ## Evaluation
 Please refer to [here](../README.md#omnist) on how to evaluate OmniST.
 
 ## Citation
 Coming soon!
-<!-- If you find OmniST useful in your research, please consider citing our paper:
-```bibtex
-@article{sun2025tracking,
-  title={Tracking and Understanding Object Transformations},
-  author={Sun, Yihong and Yang, Xinyu and Sun, Jennifer J and Hariharan, Bharath},
-  journal={Advances in Neural Information Processing Systems},
-  volume={38},
-  year={2025}
-}
-``` -->
